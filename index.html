@@ -1,1 +1,322 @@
 
+<h2 class="sr-only">Life dashboard with daily tasks, work projects, budget tracker, and school accountability sections</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.db { padding: 1.5rem 0; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.top-bar h1 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.date-chip { font-size: 13px; color: var(--color-text-secondary); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 4px 10px; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.metric-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.metric-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); display: flex; align-items: center; gap: 6px; }
+.card-title i { font-size: 16px; color: var(--color-text-secondary); }
+.add-btn { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 3px 8px; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+.add-btn:hover { background: var(--color-background-tertiary); }
+.task-input-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.task-input-row input { flex: 1; font-size: 13px; padding: 5px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); }
+.task-input-row button { font-size: 12px; padding: 5px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); cursor: pointer; }
+.task-input-row button:hover { background: var(--color-background-secondary); }
+.task-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.task-item:last-child { border-bottom: none; }
+.task-item input[type=checkbox] { margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+.task-text { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+.task-text.done { text-decoration: line-through; color: var(--color-text-tertiary); }
+.task-del { font-size: 12px; color: var(--color-text-tertiary); cursor: pointer; opacity: 0; transition: opacity 0.1s; }
+.task-item:hover .task-del { opacity: 1; }
+.priority { font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: 500; flex-shrink: 0; margin-top: 2px; }
+.p-high { background: #FCEBEB; color: #A32D2D; }
+.p-med { background: #FAEEDA; color: #854F0B; }
+.p-low { background: #EAF3DE; color: #3B6D11; }
+
+.proj-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.proj-row:last-child { border-bottom: none; }
+.proj-name { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+.prog-bar-wrap { width: 80px; height: 5px; background: var(--color-background-secondary); border-radius: 99px; overflow: hidden; flex-shrink: 0; }
+.prog-bar-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+.status-chip { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; flex-shrink: 0; }
+.s-prog { background: #E6F1FB; color: #185FA5; }
+.s-done { background: #EAF3DE; color: #3B6D11; }
+.s-hold { background: #F1EFE8; color: #5F5E5A; }
+.s-rev { background: #FAEEDA; color: #854F0B; }
+
+.budget-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+.budget-row:last-child { border-bottom: none; }
+.budget-cat { color: var(--color-text-primary); display: flex; align-items: center; gap: 6px; }
+.budget-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.budget-amt { color: var(--color-text-secondary); }
+.budget-amt.over { color: #A32D2D; font-weight: 500; }
+.budget-prog { width: 60px; height: 4px; background: var(--color-background-secondary); border-radius: 99px; overflow: hidden; }
+.budget-prog-fill { height: 100%; border-radius: 99px; }
+.total-row { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--color-border-secondary); font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+
+.class-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.class-row:last-child { border-bottom: none; }
+.class-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.class-name { font-size: 13px; color: var(--color-text-primary); flex: 1; }
+.grade-chip { font-size: 12px; font-weight: 500; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; }
+.due-label { font-size: 11px; color: var(--color-text-tertiary); flex-shrink: 0; }
+
+.habit-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; }
+.habit-block { aspect-ratio: 1; border-radius: 4px; border: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: background 0.15s; }
+.habit-block.done { background: #1D9E75; border-color: #0F6E56; color: white; }
+.habit-block.empty { background: var(--color-background-secondary); color: var(--color-text-tertiary); }
+.habit-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.section-divider { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin: 1.5rem 0 10px; }
+</style>
+
+<div class="db">
+  <div class="top-bar">
+    <h1><i class="ti ti-layout-dashboard" aria-hidden="true" style="font-size:20px; margin-right:6px; vertical-align:-2px;"></i>My dashboard</h1>
+    <span class="date-chip" id="date-chip"></span>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-check" aria-hidden="true"></i> Tasks done today</div>
+      <div class="metric-val" id="tasks-done-count">0</div>
+      <div class="metric-sub" id="tasks-total-sub">of 0 tasks</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-briefcase" aria-hidden="true"></i> Active projects</div>
+      <div class="metric-val">3</div>
+      <div class="metric-sub">2 due this week</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-wallet" aria-hidden="true"></i> Budget remaining</div>
+      <div class="metric-val" id="budget-left">$0</div>
+      <div class="metric-sub" id="budget-sub">this month</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label"><i class="ti ti-school" aria-hidden="true"></i> Avg grade</div>
+      <div class="metric-val">B+</div>
+      <div class="metric-sub">3 classes tracked</div>
+    </div>
+  </div>
+
+  <div class="section-divider">daily tasks</div>
+
+  <div class="card" style="margin-bottom: 12px;">
+    <div class="card-header">
+      <span class="card-title"><i class="ti ti-list-check"></i> Today's to-dos</span>
+    </div>
+    <div class="task-input-row">
+      <input type="text" id="task-input" placeholder="Add a task..." />
+      <select id="task-priority" style="font-size:12px; padding:5px 6px; border-radius:var(--border-radius-md); border:0.5px solid var(--color-border-secondary); background:var(--color-background-secondary); color:var(--color-text-primary);">
+        <option value="high">High</option>
+        <option value="med" selected>Med</option>
+        <option value="low">Low</option>
+      </select>
+      <button onclick="addTask()">Add</button>
+    </div>
+    <div id="task-list"></div>
+  </div>
+
+  <div class="section-divider">work projects</div>
+
+  <div class="card" style="margin-bottom: 12px;">
+    <div class="card-header">
+      <span class="card-title"><i class="ti ti-briefcase"></i> Projects</span>
+      <button class="add-btn" onclick="sendPrompt('Help me add a new work project to track')"><i class="ti ti-plus"></i> New ↗</button>
+    </div>
+    <div id="proj-list">
+      <div class="proj-row">
+        <div class="proj-name">Website redesign</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:65%; background:#378ADD;"></div></div>
+        <span style="font-size:11px; color:var(--color-text-tertiary);">65%</span>
+        <span class="status-chip s-prog">In progress</span>
+      </div>
+      <div class="proj-row">
+        <div class="proj-name">Q3 report</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:90%; background:#1D9E75;"></div></div>
+        <span style="font-size:11px; color:var(--color-text-tertiary);">90%</span>
+        <span class="status-chip s-rev">Review</span>
+      </div>
+      <div class="proj-row">
+        <div class="proj-name">Client onboarding</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:30%; background:#378ADD;"></div></div>
+        <span style="font-size:11px; color:var(--color-text-tertiary);">30%</span>
+        <span class="status-chip s-prog">In progress</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">budget</div>
+
+  <div class="card" style="margin-bottom: 12px;">
+    <div class="card-header">
+      <span class="card-title"><i class="ti ti-wallet"></i> Monthly budget</span>
+      <button class="add-btn" onclick="sendPrompt('Help me set up my monthly budget in more detail')">Edit ↗</button>
+    </div>
+    <div id="budget-list">
+      <div class="budget-row">
+        <span class="budget-cat"><span class="budget-dot" style="background:#378ADD;"></span>Rent</span>
+        <div class="budget-prog"><div class="budget-prog-fill" style="width:100%; background:#378ADD;"></div></div>
+        <span class="budget-amt">$1200 / $1200</span>
+      </div>
+      <div class="budget-row">
+        <span class="budget-cat"><span class="budget-dot" style="background:#1D9E75;"></span>Groceries</span>
+        <div class="budget-prog"><div class="budget-prog-fill" style="width:60%; background:#1D9E75;"></div></div>
+        <span class="budget-amt">$180 / $300</span>
+      </div>
+      <div class="budget-row">
+        <span class="budget-cat"><span class="budget-dot" style="background:#EF9F27;"></span>Dining out</span>
+        <div class="budget-prog"><div class="budget-prog-fill" style="width:85%; background:#EF9F27;"></div></div>
+        <span class="budget-amt">$170 / $200</span>
+      </div>
+      <div class="budget-row">
+        <span class="budget-cat"><span class="budget-dot" style="background:#D4537E;"></span>Entertainment</span>
+        <div class="budget-prog"><div class="budget-prog-fill" style="width:110%; background:#E24B4A;"></div></div>
+        <span class="budget-amt over">$82 / $75 ↑</span>
+      </div>
+      <div class="budget-row">
+        <span class="budget-cat"><span class="budget-dot" style="background:#7F77DD;"></span>Transport</span>
+        <div class="budget-prog"><div class="budget-prog-fill" style="width:40%; background:#7F77DD;"></div></div>
+        <span class="budget-amt">$48 / $120</span>
+      </div>
+    </div>
+    <div class="total-row">
+      <span>Total spent</span>
+      <span>$1,680 / $1,895</span>
+    </div>
+  </div>
+
+  <div class="section-divider">school</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-school"></i> Classes & grades</span>
+      </div>
+      <div class="class-row">
+        <span class="class-dot" style="background:#7F77DD;"></span>
+        <span class="class-name">Calculus II</span>
+        <span class="grade-chip" style="background:#EAF3DE; color:#3B6D11;">A–</span>
+        <span class="due-label">HW due Fri</span>
+      </div>
+      <div class="class-row">
+        <span class="class-dot" style="background:#378ADD;"></span>
+        <span class="class-name">Econ 202</span>
+        <span class="grade-chip" style="background:#FAEEDA; color:#854F0B;">B+</span>
+        <span class="due-label">Midterm Mon</span>
+      </div>
+      <div class="class-row">
+        <span class="class-dot" style="background:#1D9E75;"></span>
+        <span class="class-name">English Lit</span>
+        <span class="grade-chip" style="background:#EAF3DE; color:#3B6D11;">A</span>
+        <span class="due-label">Essay due Wed</span>
+      </div>
+      <div style="margin-top:10px; padding-top:10px; border-top:0.5px solid var(--color-border-tertiary);">
+        <button class="add-btn" style="font-size:12px; width:100%; justify-content:center;" onclick="sendPrompt('Help me add a new class or assignment to track')"><i class="ti ti-plus"></i> Add class / assignment ↗</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-repeat"></i> Accountability habits</span>
+      </div>
+      <div>
+        <div class="habit-label"><span>Study sessions</span><span id="study-streak"></span></div>
+        <div class="habit-grid" id="study-habit"></div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="habit-label"><span>No skipped classes</span><span id="attend-streak"></span></div>
+        <div class="habit-grid" id="attend-habit"></div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="habit-label"><span>Review notes</span><span id="notes-streak"></span></div>
+        <div class="habit-grid" id="notes-habit"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const days = ['S','M','T','W','T','F','S'];
+
+function today() {
+  return new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+document.getElementById('date-chip').textContent = today();
+
+let tasks = [
+  { text: 'Review Q3 slides', priority: 'high', done: false },
+  { text: 'Reply to client email', priority: 'med', done: false },
+  { text: 'Study for Econ midterm', priority: 'high', done: false },
+  { text: 'Buy groceries', priority: 'low', done: true },
+];
+
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+  tasks.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'task-item';
+    div.innerHTML = `
+      <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${i})" />
+      <span class="task-text${t.done ? ' done' : ''}">${t.text}</span>
+      <span class="priority p-${t.priority}">${t.priority === 'high' ? 'High' : t.priority === 'med' ? 'Med' : 'Low'}</span>
+      <span class="task-del" onclick="delTask(${i})"><i class="ti ti-x" style="font-size:13px;"></i></span>
+    `;
+    list.appendChild(div);
+  });
+  const done = tasks.filter(t => t.done).length;
+  document.getElementById('tasks-done-count').textContent = done;
+  document.getElementById('tasks-total-sub').textContent = `of ${tasks.length} tasks`;
+}
+
+function addTask() {
+  const inp = document.getElementById('task-input');
+  const pri = document.getElementById('task-priority').value;
+  if (!inp.value.trim()) return;
+  tasks.unshift({ text: inp.value.trim(), priority: pri, done: false });
+  inp.value = '';
+  renderTasks();
+}
+
+function toggleTask(i) { tasks[i].done = !tasks[i].done; renderTasks(); }
+function delTask(i) { tasks.splice(i, 1); renderTasks(); }
+
+document.getElementById('task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+function buildHabit(containerId, streakId, data) {
+  const grid = document.getElementById(containerId);
+  let streak = 0;
+  const reversed = [...data].reverse();
+  for (const d of reversed) { if (d) streak++; else break; }
+  document.getElementById(streakId).textContent = streak > 0 ? `🔥 ${streak} day streak` : '';
+  grid.innerHTML = '';
+  days.forEach((d, i) => {
+    const el = document.createElement('div');
+    el.className = `habit-block ${data[i] ? 'done' : 'empty'}`;
+    el.textContent = d;
+    el.title = data[i] ? 'Done' : 'Not done';
+    el.onclick = () => { data[i] = !data[i]; buildHabit(containerId, streakId, data); };
+    grid.appendChild(el);
+  });
+}
+
+const studyData = [true, true, true, false, true, true, false];
+const attendData = [true, true, true, true, true, false, false];
+const notesData  = [false, true, true, false, true, true, false];
+
+buildHabit('study-habit', 'study-streak', studyData);
+buildHabit('attend-habit', 'attend-streak', attendData);
+buildHabit('notes-habit', 'notes-streak', notesData);
+
+const budgetTotal = 1895;
+const budgetSpent = 1680;
+document.getElementById('budget-left').textContent = `$${budgetTotal - budgetSpent}`;
+document.getElementById('budget-sub').textContent = `$${budgetSpent} spent of $${budgetTotal}`;
+
+renderTasks();
+</script>
+
